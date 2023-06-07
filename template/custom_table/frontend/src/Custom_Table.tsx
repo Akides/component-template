@@ -1,14 +1,39 @@
 import {
+  ArrowTable,
   Streamlit,
   StreamlitComponentBase,
   withStreamlitConnection,
 } from "streamlit-component-lib"
-import React, { ReactNode } from "react"
+import React, { Fragment, ReactNode, useMemo } from "react"
+import { MaterialReactTable, type MRT_ColumnDef } from 'material-react-table';
+import { head, isNull, range, zipObject } from "lodash"
+import { type } from "os";
 
 interface State {
   numClicks: number
   isFocused: boolean
 }
+
+interface TableRowProps {
+  rowIndex: number
+  table: ArrowTable
+}
+
+type Column = {
+  accessorKey: string
+  header: string
+};
+
+type Person = {
+  name: {
+    firstName: string;
+    lastName: string;
+  };
+  age: string;
+  address: string;
+  city: string;
+  state: string;
+};
 
 /**
  * This is a React-based component template. The `render()` function is called
@@ -21,6 +46,9 @@ class CustomTable extends StreamlitComponentBase<State> {
     // Arguments that are passed to the plugin in Python are accessible
     // via `this.props.args`. Here, we access the "name" arg.
     const name = this.props.args["name"]
+    const data = this.props.args.data;
+    //const columns = this.props.args["columns"]
+    //const data = this.props.args["rows"]
 
     // Streamlit sends us a theme object via props that we can use to ensure
     // that our component has visuals that match the active theme in a
@@ -40,12 +68,63 @@ class CustomTable extends StreamlitComponentBase<State> {
       style.outline = borderStyling
     }
 
+    const columns: MRT_ColumnDef<any>[] = [
+        {
+          header: 'Name',
+          accessorKey: 'name', //simple accessorKey pointing to flat data
+        },
+        {
+          header: 'Age',
+          accessorKey: 'age', //simple accessorKey pointing to flat data
+        },
+      ];
+
+const tableColumns = (table: ArrowTable): MRT_ColumnDef<any>[] => {
+    const colsNum = table.columns
+    const headers = table.columnTable.toArray()
+    const tableColumns: any[] = []
+
+    for (let i = 0; i < headers.length; i++) {
+      var header: { [key: string]: any } = {}
+      const name = headers[i][0].toString();
+      header['header'] = name
+      header['accessorKey'] = name
+      tableColumns.push(header)
+      
+    }
+    return tableColumns
+}
+
+
+const tableData = (table: ArrowTable): any[] => {
+  const colsNum = table.columns
+  const rowsNum = table.rows
+
+  const headers = table.columnTable.toArray()
+  const tableData = []
+  for (let i = 1; i < rowsNum; i++) {
+    var row: { [key: string]: any } = {}
+    for (let j = 1; j < colsNum; j++) {
+      const element = table.getCell(i, j).content?.toString()
+      const header = headers[j-1][0].toString()
+      if (header != undefined)
+        row[header] = element
+    }
+    tableData.push(row)
+  }
+
+  return tableData
+}
+
+    
     // Show a button and some text.
     // When the button is clicked, we'll increment our "numClicks" state
     // variable, and send its new value back to Streamlit, where it'll
     // be available to the Python program.
     return (
-      <span>
+      <Fragment>
+        <MaterialReactTable columns={tableColumns(this.props.args.data)} data={tableData(this.props.args.data)} />
+        <span>
         Hello, {name}! &nbsp;
         <button
           style={style}
@@ -56,9 +135,12 @@ class CustomTable extends StreamlitComponentBase<State> {
         >
           Click Me!
         </button>
-      </span>
+        </span>
+      </Fragment>
+    
     )
   }
+  
 
   /** Click handler for our "Click Me!" button. */
   private onClicked = (): void => {
