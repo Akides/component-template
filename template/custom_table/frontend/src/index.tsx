@@ -1,10 +1,10 @@
 import React from "react"
 import ReactDOM from "react-dom"
-import MyComponent from "./MyComponent"
+import CustomTable from "./Custom_Table"
 
 ReactDOM.render(
   <React.StrictMode>
-    <MyComponent />
+    <CustomTable />
   </React.StrictMode>,
   document.getElementById("root")
 )
