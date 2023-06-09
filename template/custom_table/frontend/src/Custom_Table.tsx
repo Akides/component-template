@@ -68,53 +68,42 @@ class CustomTable extends StreamlitComponentBase<State> {
       style.outline = borderStyling
     }
 
-    const columns: MRT_ColumnDef<any>[] = [
-        {
-          header: 'Name',
-          accessorKey: 'name', //simple accessorKey pointing to flat data
-        },
-        {
-          header: 'Age',
-          accessorKey: 'age', //simple accessorKey pointing to flat data
-        },
-      ];
+    const tableColumns = (table: ArrowTable): MRT_ColumnDef<any>[] => {
+        const colsNum = table.columns
+        const headers = table.columnTable.toArray()
+        const tableColumns: any[] = []
 
-const tableColumns = (table: ArrowTable): MRT_ColumnDef<any>[] => {
-    const colsNum = table.columns
-    const headers = table.columnTable.toArray()
-    const tableColumns: any[] = []
-
-    for (let i = 0; i < headers.length; i++) {
-      var header: { [key: string]: any } = {}
-      const name = headers[i][0].toString();
-      header['header'] = name
-      header['accessorKey'] = name
-      tableColumns.push(header)
-      
+        for (let i = 0; i < headers.length; i++) {
+          var header: { [key: string]: any } = {}
+          const name = headers[i][0].toString();
+          header['header'] = name
+          header['accessorKey'] = name
+          tableColumns.push(header)
+          
+        }
+        return tableColumns
     }
-    return tableColumns
-}
 
 
-const tableData = (table: ArrowTable): any[] => {
-  const colsNum = table.columns
-  const rowsNum = table.rows
+    const tableData = (table: ArrowTable): any[] => {
+      const colsNum = table.columns
+      const rowsNum = table.rows
 
-  const headers = table.columnTable.toArray()
-  const tableData = []
-  for (let i = 1; i < rowsNum; i++) {
-    var row: { [key: string]: any } = {}
-    for (let j = 1; j < colsNum; j++) {
-      const element = table.getCell(i, j).content?.toString()
-      const header = headers[j-1][0].toString()
-      if (header != undefined)
-        row[header] = element
+      const headers = table.columnTable.toArray()
+      const tableData = []
+      for (let i = 1; i < rowsNum; i++) {
+        var row: { [key: string]: any } = {}
+        for (let j = 1; j < colsNum; j++) {
+          const element = table.getCell(i, j).content?.toString()
+          const header = headers[j-1][0].toString()
+          if (header != undefined)
+            row[header] = element
+        }
+        tableData.push(row)
+      }
+
+      return tableData
     }
-    tableData.push(row)
-  }
-
-  return tableData
-}
 
     
     // Show a button and some text.
@@ -123,7 +112,11 @@ const tableData = (table: ArrowTable): any[] => {
     // be available to the Python program.
     return (
       <Fragment>
-        <MaterialReactTable columns={tableColumns(this.props.args.data)} data={tableData(this.props.args.data)} />
+        <MaterialReactTable
+          columns={tableColumns(this.props.args.data)}
+          data={tableData(this.props.args.data)}
+          enableRowSelection={true}
+        />
         <span>
         Hello, {name}! &nbsp;
         <button
