@@ -11,6 +11,7 @@ import { Button } from "@mui/material";
 interface State {
   numClicks: number
   isFocused: boolean
+  selectedRows: MRT_RowSelectionState
 }
 
 /**
@@ -18,7 +19,7 @@ interface State {
  * automatically when your component should be re-rendered.
  */
 class CustomTable extends StreamlitComponentBase<State> {
-  public state = { numClicks: 0, isFocused: false }
+  public state = { numClicks: 0, isFocused: false, selectedRows: {} }
   tableInstanceRef = createRef<MRT_TableInstance<any>>();
 
   tableColumns = (table: ArrowTable): MRT_ColumnDef<any>[] => {
@@ -36,32 +37,61 @@ class CustomTable extends StreamlitComponentBase<State> {
     return tableColumns
 }
 
+  tableData = (table: ArrowTable): any[] => {
+    const colsNum = table.columns
+    const rowsNum = table.rows
 
-tableData = (table: ArrowTable): any[] => {
-  const colsNum = table.columns
-  const rowsNum = table.rows
-
-  const headers = table.columnTable.toArray()
-  const tableData = []
-  for (let i = 1; i < rowsNum; i++) {
-    var row: { [key: string]: any } = {}
-    for (let j = 1; j < colsNum; j++) {
-      const element = table.getCell(i, j).content?.toString()
-      const header = headers[j-1][0].toString()
-      if (header != undefined)
-        row[header] = element
+    const headers = table.columnTable.toArray()
+    const tableData = []
+    for (let i = 1; i < rowsNum; i++) {
+      var row: { [key: string]: any } = {}
+      for (let j = 1; j < colsNum; j++) {
+        const element = table.getCell(i, j).content?.toString()
+        const header = headers[j-1][0].toString()
+        if (header != undefined)
+          row[header] = element
+      }
+      tableData.push(row)
     }
-    tableData.push(row)
+
+    return tableData
   }
 
-  return tableData
-}
+  handleRowSelection = () => {
+    const rowSelection = this.tableInstanceRef.current?.getState().rowSelection;
+    console.log(rowSelection)
+    const rowData = this.getRowsData(rowSelection)
+    Streamlit.setComponentValue(rowData)
+    // setState should be obsolete since streamlit rerenders the page
+    //this.setState(
+    //  prevState => ({ selectedRows: this.getRowsData(rowSelection) }),
+    //  () => Streamlit.setComponentValue(this.state.selectedRows)
+    //)
+  };
 
-handleRowSelection = () => {
-  const rowSelection = this.tableInstanceRef.current?.getState().rowSelection;
-  console.log('row selected')
-  console.log(rowSelection)
-};
+  getRowsData = (selection: MRT_RowSelectionState | undefined): Object[] => {
+    for (const index in selection) {
+      console.log(index)
+    }
+    const data: ArrowTable = this.props.args.data;
+
+    const test = data.columnTable
+    console.log(test.toArray())
+
+    const row1 = {
+      index: 5,
+      name: "Agu",
+      age: "25",
+    }
+    const row2 = {
+      index: 9,
+      name: "Hannes",
+      age:"30"
+    }
+    const rows = [row1, row2]
+
+    return rows
+  }
 
 
   public render = (): ReactNode => {
