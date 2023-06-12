@@ -7,17 +7,11 @@ import {
 import React, { Fragment, ReactNode, createRef } from "react"
 import { MaterialReactTable, MRT_RowSelectionState, type MRT_ColumnDef, MRT_TableInstance } from 'material-react-table';
 import { Button } from "@mui/material";
-
+import BulkEditor from "./Bulk_Editor";
 interface State {
   numClicks: number
   isFocused: boolean
-  selectedRows: MRT_RowSelectionState
-}
-
-type SelectionRow  = {
-  index: number
-  name: string
-  age: string
+  modalOpen: boolean
 }
 
 /**
@@ -25,7 +19,11 @@ type SelectionRow  = {
  * automatically when your component should be re-rendered.
  */
 class CustomTable extends StreamlitComponentBase<State> {
-  public state = { numClicks: 0, isFocused: false, selectedRows: {} }
+  public state = { numClicks: 0,
+    isFocused: false,
+    modalOpen: false
+  }
+
   tableInstanceRef = createRef<MRT_TableInstance<any>>();
 
   tableColumns = (table: ArrowTable): MRT_ColumnDef<any>[] => {
@@ -63,54 +61,6 @@ class CustomTable extends StreamlitComponentBase<State> {
     return tableData
   }
 
-  handleRowSelection = () => {
-    const rowSelection = this.tableInstanceRef.current?.getState().rowSelection;
-    console.log(rowSelection)
-    const rowData = this.getRowsData(rowSelection)
-    Streamlit.setComponentValue(rowData)
-    // setState should be obsolete since streamlit rerenders the page
-    //this.setState(
-    //  prevState => ({ selectedRows: this.getRowsData(rowSelection) }),
-    //  () => Streamlit.setComponentValue(this.state.selectedRows)
-    //)
-  };
-
-  getRowsData = (selection: MRT_RowSelectionState | undefined): SelectionRow[] => {
-    for (const index in selection) {
-      console.log(index)
-    }
-    const table: ArrowTable = this.props.args.data;
-    const colNums = table.columns
-    const headers = table.columnTable.toArray()
-
-    const rows: SelectionRow[] = []
-
-    for (const index in selection) {
-      const i = parseInt(index)
-      let row: SelectionRow = {
-        index: i,
-        name: "",
-        age: ""
-      }
-      for (let j = 1; j < colNums; j++) {
-        const cell = table.getCell(i+1, j).content?.toString()
-        const header = headers[j-1][0].toString()
-        if (cell !== undefined) {
-          if (header === "Name") {
-            row['name'] = cell.toString()
-          }
-          if (header === "ID") {
-            row['age'] = cell.toString()
-          }
-        }
-      }
-      rows.push(row)
-    }
-    
-    return rows
-  }
-
-
   public render = (): ReactNode => {
 
     // Arguments that are passed to the plugin in Python are accessible
@@ -135,11 +85,9 @@ class CustomTable extends StreamlitComponentBase<State> {
       style.border = borderStyling
       style.outline = borderStyling
     }
-    
-    // Show a button and some text.
-    // When the button is clicked, we'll increment our "numClicks" state
-    // variable, and send its new value back to Streamlit, where it'll
-    // be available to the Python program.
+
+    console.log(this.state.modalOpen)
+
     return (
       <Fragment>
         <MaterialReactTable
@@ -148,43 +96,11 @@ class CustomTable extends StreamlitComponentBase<State> {
           enableRowSelection={true}
           tableInstanceRef={this.tableInstanceRef}
         />
-        <Button variant="text" onClick={this.handleRowSelection}>bulk edit</Button>
-        <span>
-        Hello, {name}! &nbsp;
-        <button
-          style={style}
-          onClick={this.onClicked}
-          disabled={this.props.disabled}
-          onFocus={this._onFocus}
-          onBlur={this._onBlur}
-        >
-          Click Me!
-        </button>
-        </span>
+        <Button variant="text" onClick={() => this.setState({modalOpen: true})}>bulk edit</Button>
+        <BulkEditor open={this.state.modalOpen} onClose={() => this.setState({modalOpen: false})} table={data} selection={this.tableInstanceRef.current?.getState().rowSelection!}/>
       </Fragment>
     
     )
-  }
-  
-
-  /** Click handler for our "Click Me!" button. */
-  private onClicked = (): void => {
-    // Increment state.numClicks, and pass the new value back to
-    // Streamlit via `Streamlit.setComponentValue`.
-    this.setState(
-      prevState => ({ numClicks: prevState.numClicks + 1 }),
-      () => Streamlit.setComponentValue(this.state.numClicks)
-    )
-  }
-
-  /** Focus handler for our "Click Me!" button. */
-  private _onFocus = (): void => {
-    this.setState({ isFocused: true })
-  }
-
-  /** Blur handler for our "Click Me!" button. */
-  private _onBlur = (): void => {
-    this.setState({ isFocused: false })
   }
 }
 
