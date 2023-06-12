@@ -14,6 +14,12 @@ interface State {
   selectedRows: MRT_RowSelectionState
 }
 
+type SelectionRow  = {
+  index: number
+  name: string
+  age: string
+}
+
 /**
  * This is a React-based component template. The `render()` function is called
  * automatically when your component should be re-rendered.
@@ -48,7 +54,7 @@ class CustomTable extends StreamlitComponentBase<State> {
       for (let j = 1; j < colsNum; j++) {
         const element = table.getCell(i, j).content?.toString()
         const header = headers[j-1][0].toString()
-        if (header != undefined)
+        if (header !== undefined)
           row[header] = element
       }
       tableData.push(row)
@@ -69,27 +75,38 @@ class CustomTable extends StreamlitComponentBase<State> {
     //)
   };
 
-  getRowsData = (selection: MRT_RowSelectionState | undefined): Object[] => {
+  getRowsData = (selection: MRT_RowSelectionState | undefined): SelectionRow[] => {
     for (const index in selection) {
       console.log(index)
     }
-    const data: ArrowTable = this.props.args.data;
+    const table: ArrowTable = this.props.args.data;
+    const colNums = table.columns
+    const headers = table.columnTable.toArray()
 
-    const test = data.columnTable
-    console.log(test.toArray())
+    const rows: SelectionRow[] = []
 
-    const row1 = {
-      index: 5,
-      name: "Agu",
-      age: "25",
+    for (const index in selection) {
+      const i = parseInt(index)
+      let row: SelectionRow = {
+        index: i,
+        name: "",
+        age: ""
+      }
+      for (let j = 1; j < colNums; j++) {
+        const cell = table.getCell(i+1, j).content?.toString()
+        const header = headers[j-1][0].toString()
+        if (cell !== undefined) {
+          if (header === "Name") {
+            row['name'] = cell.toString()
+          }
+          if (header === "ID") {
+            row['age'] = cell.toString()
+          }
+        }
+      }
+      rows.push(row)
     }
-    const row2 = {
-      index: 9,
-      name: "Hannes",
-      age:"30"
-    }
-    const rows = [row1, row2]
-
+    
     return rows
   }
 
