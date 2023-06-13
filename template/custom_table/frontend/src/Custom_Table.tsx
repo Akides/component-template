@@ -6,7 +6,7 @@ import {
 } from "streamlit-component-lib"
 import React, { Fragment, ReactNode, createRef } from "react"
 import { MaterialReactTable, MRT_RowSelectionState, type MRT_ColumnDef, MRT_TableInstance } from 'material-react-table';
-import { Button } from "@mui/material";
+import { Box, Button, Stack } from "@mui/material";
 import BulkEditor from "./Bulk_Editor";
 interface State {
   numClicks: number
@@ -31,12 +31,18 @@ class CustomTable extends StreamlitComponentBase<State> {
     const tableColumns: any[] = []
 
     for (let i = 0; i < headers.length; i++) {
-      var header: { [key: string]: any } = {}
+      var header: { [key: string]: any } = {
+        Footer: () => (
+          <Stack>
+            Max Age:
+            <Box color="warning.main">{Math.round(4.5)}</Box>
+          </Stack>
+        ),
+      }
       const name = headers[i][0].toString();
       header['header'] = name
       header['accessorKey'] = name
       tableColumns.push(header)
-      
     }
     return tableColumns
 }
@@ -65,7 +71,6 @@ class CustomTable extends StreamlitComponentBase<State> {
 
     // Arguments that are passed to the plugin in Python are accessible
     // via `this.props.args`. Here, we access the "name" arg.
-    const name = this.props.args["name"]
     const data = this.props.args.data;
 
     // Streamlit sends us a theme object via props that we can use to ensure
@@ -86,14 +91,17 @@ class CustomTable extends StreamlitComponentBase<State> {
       style.outline = borderStyling
     }
 
-    console.log(this.state.modalOpen)
-
     return (
       <Fragment>
         <MaterialReactTable
           columns={this.tableColumns(data)}
           data={this.tableData(data)}
-          enableRowSelection={true}
+          enableRowSelection
+          enableStickyHeader
+          enableStickyFooter
+          enableClickToCopy
+          muiTableContainerProps={{ sx: { maxHeight: '600px' } }}
+          initialState={{ pagination: { pageSize: 25, pageIndex: 2 } }} 
           tableInstanceRef={this.tableInstanceRef}
         />
         <Button variant="text" onClick={() => this.setState({modalOpen: true})}>bulk edit</Button>
