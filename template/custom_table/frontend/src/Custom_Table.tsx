@@ -1,13 +1,13 @@
 import {
   ArrowTable,
-  Streamlit,
   StreamlitComponentBase,
   withStreamlitConnection,
 } from "streamlit-component-lib"
 import React, { Fragment, ReactNode, createRef } from "react"
-import { MaterialReactTable, MRT_RowSelectionState, type MRT_ColumnDef, MRT_TableInstance } from 'material-react-table';
+import { MaterialReactTable, type MRT_ColumnDef, MRT_TableInstance } from 'material-react-table';
 import { Box, Button, Stack } from "@mui/material";
 import BulkEditor from "./Bulk_Editor";
+import { size } from "lodash";
 interface State {
   numClicks: number
   isFocused: boolean
@@ -33,11 +33,9 @@ class CustomTable extends StreamlitComponentBase<State> {
     for (let i = 0; i < headers.length; i++) {
       var header: { [key: string]: any } = {
         Footer: () => (
-          <Stack>
-            Max Age:
-            <Box color="warning.main">{Math.round(4.5)}</Box>
-          </Stack>
+          <Box color="warning.main">{Math.round(4.5)}</Box>
         ),
+        size: 100
       }
       const name = headers[i][0].toString();
       header['header'] = name
@@ -93,18 +91,21 @@ class CustomTable extends StreamlitComponentBase<State> {
 
     return (
       <Fragment>
+        <Button variant="text" onClick={() => this.setState({modalOpen: true})}>bulk edit</Button>
         <MaterialReactTable
           columns={this.tableColumns(data)}
           data={this.tableData(data)}
           enableRowSelection
+          enableColumnActions={false}
           enableStickyHeader
           enableStickyFooter
           enableClickToCopy
           muiTableContainerProps={{ sx: { maxHeight: '600px' } }}
-          initialState={{ pagination: { pageSize: 25, pageIndex: 2 } }} 
+          enableDensityToggle={false}
+          initialState={{ pagination: { pageSize: 25, pageIndex: 2 }, density: 'compact' }} 
+          enableFullScreenToggle={false}
           tableInstanceRef={this.tableInstanceRef}
         />
-        <Button variant="text" onClick={() => this.setState({modalOpen: true})}>bulk edit</Button>
         <BulkEditor open={this.state.modalOpen} onClose={() => this.setState({modalOpen: false})} table={data} selection={this.tableInstanceRef.current?.getState().rowSelection!}/>
       </Fragment>
     

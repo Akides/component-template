@@ -1,12 +1,10 @@
 import {
     ArrowTable,
     Streamlit,
-    StreamlitComponentBase,
-    withStreamlitConnection,
   } from "streamlit-component-lib"
-  import React, { Fragment, ReactNode, createRef, useState } from "react"
+  import React, { useState } from "react"
   import { MRT_RowSelectionState } from 'material-react-table';
-  import { AppBar, Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Divider, IconButton, List, ListItem, ListItemText, TextField, Toolbar, Typography } from "@mui/material";
+  import { AppBar, Button, Dialog, IconButton, TextField, Toolbar, Typography } from "@mui/material";
   import { TransitionProps } from '@mui/material/transitions';
 import CloseIcon from '@mui/icons-material/Close';
 import Slide from '@mui/material/Slide';
@@ -74,38 +72,6 @@ function BulkEditor(props: BulkProps) {
         return rows
     }
 
-    const getRowsData = (): any[] => {
-        for (const index in selection) {
-          console.log(index)
-        }
-    
-        const rows: any[] = []
-    
-        for (const index in selection) {
-          const i = parseInt(index)
-          let row: any = {
-            index: i,
-            name: "",
-            age: ""
-          }
-          for (let j = 1; j < colNums; j++) {
-            const cell = table.getCell(i+1, j).content?.toString()
-            const header = headersArr[j-1][0].toString()
-            if (cell !== undefined) {
-              if (header === "Name") {
-                row['name'] = cell.toString()
-              }
-              if (header === "ID") {
-                row['age'] = cell.toString()
-              }
-            }
-          }
-          rows.push(row)
-        }
-        
-        return rows
-      }
-
     const columnTextFields = () => {
         let i = 0
         return headers.map( header => {
@@ -148,11 +114,6 @@ function BulkEditor(props: BulkProps) {
                 </Button>
             </Toolbar>
         </AppBar>
-        <DialogContent>
-          <DialogContentText>
-            Edit multiple rows
-          </DialogContentText>
-        </DialogContent>
         {columnTextFields()}
     </Dialog>
 }
