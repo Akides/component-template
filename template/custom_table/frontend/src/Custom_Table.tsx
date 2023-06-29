@@ -5,14 +5,16 @@ import {
   withStreamlitConnection,
 } from "streamlit-component-lib"
 import React, { Fragment, ReactNode, createRef } from "react"
-import { MaterialReactTable, type MRT_ColumnDef, MRT_TableInstance } from 'material-react-table';
+import { MaterialReactTable, type MRT_ColumnDef, MRT_TableInstance, MRT_RowSelectionState } from 'material-react-table';
 import { Box, Button, Stack } from "@mui/material";
 import { size } from "lodash";
 interface State {
   numClicks: number
   isFocused: boolean
   modalOpen: boolean
+  rowSelection: MRT_RowSelectionState
 }
+
 
 /**
  * This is a React-based component template. The `render()` function is called
@@ -21,7 +23,9 @@ interface State {
 class CustomTable extends StreamlitComponentBase<State> {
   public state = { numClicks: 0,
     isFocused: false,
-    modalOpen: false
+    modalOpen: false,
+    rowSelection: {
+    }
   }
 
   tableInstanceRef = createRef<MRT_TableInstance<any>>();
@@ -73,13 +77,17 @@ class CustomTable extends StreamlitComponentBase<State> {
 
   }
 
+  handleRowSelectionChange = () => {
+    //console.log(this.tableInstanceRef.current?.getState().rowSelection)
+    //Streamlit.setComponentValue(this.tableInstanceRef.current?.getState().rowSelection)
+  }
+
   public render = (): ReactNode => {
 
     // Arguments that are passed to the plugin in Python are accessible
     // via `this.props.args`. Here, we access the "name" arg.
     const data = this.props.args.data;
     const pin = this.props.args.pin;
-    console.log(pin);
 
     // Streamlit sends us a theme object via props that we can use to ensure
     // that our component has visuals that match the active theme in a
@@ -102,23 +110,42 @@ class CustomTable extends StreamlitComponentBase<State> {
     /*        <BulkEditor open={this.state.modalOpen} onClose={() => this.setState({modalOpen: false})} table={data} selection={this.tableInstanceRef.current?.getState().rowSelection!}/>
  */
 
-    let columns = this.tableColumns(data)
+    let columns = this.tableColumns(data, pin)
     let colData = this.tableData(data)
 
      return (
       <MaterialReactTable
         columns={columns}
         data={colData}
-        enableRowSelection //enable some features
-        enableMultiRowSelection={false}
+        //enableRowSelection //enable some features
+        //enableMultiRowSelection={false}
         enableColumnActions={false}
         enableStickyHeader
         enableStickyFooter={pin}
-        muiTableContainerProps={{ sx: { maxHeight: '600px' } }}
+        //muiTableContainerProps={{ sx: { maxHeight: '600px' } }}
         //enableColumnOrdering
-        enableGlobalFilter={false} //turn off a feature
-        initialState={{density: 'compact' }} 
-        tableInstanceRef={this.tableInstanceRef}
+        //enableGlobalFilter={false} //turn off a feature
+        //initialState={{density: 'compact' }} 
+        //tableInstanceRef={this.tableInstanceRef}
+        //onRowSelectionChange={this.handleRowSelectionChange}
+        getRowId={(row) => row.ID}
+        muiTableBodyRowProps={({ row }) => ({
+          //implement row selection click events manually
+          onClick: () =>
+            {
+              console.log(row.id)
+              this.setState((prevState) => ({
+                rowSelection: {
+                  [row.id]: !prevState.rowSelection[row.id],
+                },
+              }));
+            },
+          selected: this.state.rowSelection[row.id as keyof typeof this.state.rowSelection],
+          sx: {
+            cursor: 'pointer',
+          },
+        })}
+        state={this.state.rowSelection}
       />
     );
   }
