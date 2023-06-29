@@ -6,7 +6,6 @@ import {
 import React, { Fragment, ReactNode, createRef } from "react"
 import { MaterialReactTable, type MRT_ColumnDef, MRT_TableInstance } from 'material-react-table';
 import { Box, Button, Stack } from "@mui/material";
-import BulkEditor from "./Bulk_Editor";
 import { size } from "lodash";
 interface State {
   numClicks: number
@@ -33,7 +32,7 @@ class CustomTable extends StreamlitComponentBase<State> {
     for (let i = 0; i < headers.length; i++) {
       var header: { [key: string]: any } = {
         Footer: () => (
-          <Box color="warning.main">{Math.round(4.5)}</Box>
+          <Box color="warning.main">{5}</Box>
         ),
         size: 100
       }
@@ -61,8 +60,10 @@ class CustomTable extends StreamlitComponentBase<State> {
       }
       tableData.push(row)
     }
+    
 
     return tableData
+
   }
 
   public render = (): ReactNode => {
@@ -88,28 +89,22 @@ class CustomTable extends StreamlitComponentBase<State> {
       style.border = borderStyling
       style.outline = borderStyling
     }
+    /*<Button variant="text" onClick={() => this.setState({modalOpen: true})}>bulk edit</Button> */
+    /*        <BulkEditor open={this.state.modalOpen} onClose={() => this.setState({modalOpen: false})} table={data} selection={this.tableInstanceRef.current?.getState().rowSelection!}/>
+ */
 
-    return (
-      <Fragment>
-        <Button variant="text" onClick={() => this.setState({modalOpen: true})}>bulk edit</Button>
-        <MaterialReactTable
-          columns={this.tableColumns(data)}
-          data={this.tableData(data)}
-          enableRowSelection
-          enableColumnActions={false}
-          enableStickyHeader
-          enableStickyFooter
-          enableClickToCopy
-          muiTableContainerProps={{ sx: { maxHeight: '600px' } }}
-          enableDensityToggle={false}
-          initialState={{ pagination: { pageSize: 25, pageIndex: 2 }, density: 'compact' }} 
-          enableFullScreenToggle={false}
-          tableInstanceRef={this.tableInstanceRef}
-        />
-        <BulkEditor open={this.state.modalOpen} onClose={() => this.setState({modalOpen: false})} table={data} selection={this.tableInstanceRef.current?.getState().rowSelection!}/>
-      </Fragment>
-    
-    )
+    let columns = this.tableColumns(data)
+    let colData = this.tableData(data)
+
+     return (
+      <MaterialReactTable
+        columns={columns}
+        data={colData}
+        enableRowSelection //enable some features
+        enableColumnOrdering
+        enableGlobalFilter={false} //turn off a feature
+      />
+    );
   }
 }
 
