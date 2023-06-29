@@ -1,5 +1,6 @@
 import {
   ArrowTable,
+  Streamlit,
   StreamlitComponentBase,
   withStreamlitConnection,
 } from "streamlit-component-lib"
@@ -25,16 +26,24 @@ class CustomTable extends StreamlitComponentBase<State> {
 
   tableInstanceRef = createRef<MRT_TableInstance<any>>();
 
-  tableColumns = (table: ArrowTable): MRT_ColumnDef<any>[] => {
+  tableColumns = (table: ArrowTable, pin: boolean): MRT_ColumnDef<any>[] => {
     const headers = table.columnTable.toArray()
     const tableColumns: any[] = []
 
     for (let i = 0; i < headers.length; i++) {
-      var header: { [key: string]: any } = {
-        Footer: () => (
-          <Box color="warning.main">{5}</Box>
-        ),
-        size: 100
+      let header: { [key: string]: any } = {}
+      if (pin) {
+        header = {
+          Footer: () => (
+            <Box color="warning.main">{5}</Box>
+          ),
+          size: 100
+        }
+      }
+      else {
+        header = {
+          size: 100
+        }
       }
       const name = headers[i][0].toString();
       header['header'] = name
@@ -60,8 +69,6 @@ class CustomTable extends StreamlitComponentBase<State> {
       }
       tableData.push(row)
     }
-    
-
     return tableData
 
   }
@@ -71,6 +78,8 @@ class CustomTable extends StreamlitComponentBase<State> {
     // Arguments that are passed to the plugin in Python are accessible
     // via `this.props.args`. Here, we access the "name" arg.
     const data = this.props.args.data;
+    const pin = this.props.args.pin;
+    console.log(pin);
 
     // Streamlit sends us a theme object via props that we can use to ensure
     // that our component has visuals that match the active theme in a
@@ -101,8 +110,15 @@ class CustomTable extends StreamlitComponentBase<State> {
         columns={columns}
         data={colData}
         enableRowSelection //enable some features
-        enableColumnOrdering
+        enableMultiRowSelection={false}
+        enableColumnActions={false}
+        enableStickyHeader
+        enableStickyFooter={pin}
+        muiTableContainerProps={{ sx: { maxHeight: '600px' } }}
+        //enableColumnOrdering
         enableGlobalFilter={false} //turn off a feature
+        initialState={{density: 'compact' }} 
+        tableInstanceRef={this.tableInstanceRef}
       />
     );
   }
