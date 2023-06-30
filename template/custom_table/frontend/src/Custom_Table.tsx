@@ -33,7 +33,15 @@ class CustomTable extends StreamlitComponentBase<State> {
 
   tableInstanceRef = createRef<MRT_TableInstance<any>>();
 
-  tableColumns = (table: ArrowTable, pin: boolean): MRT_ColumnDef<any>[] => {
+  configureColumnVisibility = (hideColumns: Array<string>) => {
+    let hideObj: { [key: string]: any } = {}
+    hideColumns.forEach(col => {
+      hideObj[col] = false
+    });
+    return hideObj
+  }
+
+  tableColumns = (table: ArrowTable, pin: boolean, hideColumns: Array<string>): MRT_ColumnDef<any>[] => {
     const headers = table.columnTable.toArray()
     const tableColumns: any[] = []
 
@@ -55,6 +63,8 @@ class CustomTable extends StreamlitComponentBase<State> {
       const name = headers[i][0].toString();
       header['header'] = name
       header['accessorKey'] = name
+      if (hideColumns.includes(name))
+      header['enableHiding'] = false
       tableColumns.push(header)
     }
     return tableColumns
@@ -82,9 +92,9 @@ class CustomTable extends StreamlitComponentBase<State> {
   displayedTable = () => {
     let rows = this.tableInstanceRef.current!.getFilteredRowModel().rows.map(row => row.original)
     let cols = this.tableInstanceRef.current!.getVisibleFlatColumns().map(col => col.id)
-    let rowsDisplayed: Array<String[]> = []
+    let rowsDisplayed: Array<string[]> = []
     rows.forEach(row => {
-      let rowDisplayed: String[] = []
+      let rowDisplayed: string[] = []
       cols.forEach(col => {
         rowDisplayed.push(row[col])
       });
@@ -107,6 +117,7 @@ class CustomTable extends StreamlitComponentBase<State> {
     // via `this.props.args`. Here, we access the "name" arg.
     const data = this.props.args.data;
     const pin = this.props.args.pin;
+    const hideColumns: Array<string> = this.props.args.hide_columns;
 
     // Streamlit sends us a theme object via props that we can use to ensure
     // that our component has visuals that match the active theme in a
@@ -129,20 +140,17 @@ class CustomTable extends StreamlitComponentBase<State> {
     /*        <BulkEditor open={this.state.modalOpen} onClose={() => this.setState({modalOpen: false})} table={data} selection={this.tableInstanceRef.current?.getState().rowSelection!}/>
  */
 
-    let columns = this.tableColumns(data, pin)
-    let colData = this.tableData(data)
-
      return (
       <MaterialReactTable
-        columns={columns}
-        data={colData}
+        columns={this.tableColumns(data, pin, hideColumns)}
+        data={this.tableData(data)}
         enableFullScreenToggle={false}
         enableDensityToggle={false}
         enableColumnActions={false}
         enableStickyHeader
         enableStickyFooter={pin}
         muiTableContainerProps={{ sx: { maxHeight: '600px' } }}
-        initialState={{density: 'compact', columnVisibility: { ID: false } }} 
+        initialState={{density: 'compact', columnVisibility: this.configureColumnVisibility(hideColumns) }} 
         getRowId={(row) => row.ID}
         //enablePagination={false}
         autoResetPageIndex={false}
