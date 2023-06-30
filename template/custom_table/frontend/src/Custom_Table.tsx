@@ -7,7 +7,7 @@ import {
 import React, { Fragment, ReactNode, createRef } from "react"
 import { MaterialReactTable, type MRT_ColumnDef, MRT_TableInstance, MRT_RowSelectionState, MRT_PaginationState } from 'material-react-table';
 import { Box, Button, Stack } from "@mui/material";
-import { size } from "lodash";
+import { List, size } from "lodash";
 interface State {
   numClicks: number
   isFocused: boolean
@@ -76,7 +76,23 @@ class CustomTable extends StreamlitComponentBase<State> {
       tableData.push(row)
     }
     return tableData
+  }
 
+  displayedTable = () => {
+    let rows = this.tableInstanceRef.current!.getFilteredRowModel().rows.map(row => row.original)
+    let cols = this.tableInstanceRef.current!.getVisibleFlatColumns().map(col => col.id)
+    let rowsDisplayed: Array<String[]> = []
+    rows.forEach(row => {
+      let rowDisplayed: String[] = []
+      cols.forEach(col => {
+        rowDisplayed.push(row[col])
+      });
+      rowsDisplayed.push(rowDisplayed)
+    });
+    return {
+      columns: cols,
+      rows: rowsDisplayed
+    }
   }
 
   handleRowSelectionChange = () => {
@@ -90,7 +106,6 @@ class CustomTable extends StreamlitComponentBase<State> {
     // via `this.props.args`. Here, we access the "name" arg.
     const data = this.props.args.data;
     const pin = this.props.args.pin;
-    const hideColumns: Array<String> = this.props.args.hide_columns;
 
     // Streamlit sends us a theme object via props that we can use to ensure
     // that our component has visuals that match the active theme in a
@@ -128,12 +143,17 @@ class CustomTable extends StreamlitComponentBase<State> {
         getRowId={(row) => row.ID}
         //enablePagination={false}
         autoResetPageIndex={false}
+        tableInstanceRef={this.tableInstanceRef}
         muiTableBodyRowProps={({ row }) => ({
           //implement row selection click events manually
           onClick: () =>
             {
-              console.log(row.id)
-              Streamlit.setComponentValue(row.id)
+              const displayed = this.displayedTable()
+              const finalTable = {
+                ...displayed,
+                rowID: row.id
+              }
+              Streamlit.setComponentValue(finalTable)
               this.setState((prevState) => ({
                 rowSelection: {
                   [row.id]: !prevState.rowSelection[row.id],
