@@ -5,7 +5,7 @@ import {
   withStreamlitConnection,
 } from "streamlit-component-lib"
 import React, { Fragment, ReactNode, createRef } from "react"
-import { MaterialReactTable, type MRT_ColumnDef, MRT_TableInstance, MRT_RowSelectionState } from 'material-react-table';
+import { MaterialReactTable, type MRT_ColumnDef, MRT_TableInstance, MRT_RowSelectionState, MRT_PaginationState } from 'material-react-table';
 import { Box, Button, Stack } from "@mui/material";
 import { size } from "lodash";
 interface State {
@@ -13,6 +13,7 @@ interface State {
   isFocused: boolean
   modalOpen: boolean
   rowSelection: MRT_RowSelectionState
+  pagination: MRT_PaginationState
 }
 
 
@@ -25,7 +26,8 @@ class CustomTable extends StreamlitComponentBase<State> {
     isFocused: false,
     modalOpen: false,
     rowSelection: {
-    }
+    },
+    pagination: { pageIndex: 0, pageSize: 10 }
   }
 
   tableInstanceRef = createRef<MRT_TableInstance<any>>();
@@ -124,6 +126,8 @@ class CustomTable extends StreamlitComponentBase<State> {
         muiTableContainerProps={{ sx: { maxHeight: '600px' } }}
         initialState={{density: 'compact', columnVisibility: { ID: false } }} 
         getRowId={(row) => row.ID}
+        //enablePagination={false}
+        autoResetPageIndex={false}
         muiTableBodyRowProps={({ row }) => ({
           //implement row selection click events manually
           onClick: () =>
@@ -141,7 +145,7 @@ class CustomTable extends StreamlitComponentBase<State> {
             cursor: 'pointer',
           },
         })}
-        state={this.state.rowSelection}
+        state={ this.state.rowSelection}
       />
     );
   }
