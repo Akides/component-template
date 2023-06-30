@@ -88,6 +88,7 @@ class CustomTable extends StreamlitComponentBase<State> {
     // via `this.props.args`. Here, we access the "name" arg.
     const data = this.props.args.data;
     const pin = this.props.args.pin;
+    const hideColumns: Array<String> = this.props.args.hide_columns;
 
     // Streamlit sends us a theme object via props that we can use to ensure
     // that our component has visuals that match the active theme in a
@@ -117,23 +118,18 @@ class CustomTable extends StreamlitComponentBase<State> {
       <MaterialReactTable
         columns={columns}
         data={colData}
-        //enableRowSelection //enable some features
-        //enableMultiRowSelection={false}
         enableColumnActions={false}
         enableStickyHeader
         enableStickyFooter={pin}
-        //muiTableContainerProps={{ sx: { maxHeight: '600px' } }}
-        //enableColumnOrdering
-        //enableGlobalFilter={false} //turn off a feature
-        //initialState={{density: 'compact' }} 
-        //tableInstanceRef={this.tableInstanceRef}
-        //onRowSelectionChange={this.handleRowSelectionChange}
+        muiTableContainerProps={{ sx: { maxHeight: '600px' } }}
+        initialState={{density: 'compact', columnVisibility: { ID: false } }} 
         getRowId={(row) => row.ID}
         muiTableBodyRowProps={({ row }) => ({
           //implement row selection click events manually
           onClick: () =>
             {
               console.log(row.id)
+              Streamlit.setComponentValue(row.id)
               this.setState((prevState) => ({
                 rowSelection: {
                   [row.id]: !prevState.rowSelection[row.id],
