@@ -136,6 +136,8 @@ class CustomTable extends StreamlitComponentBase<State> {
       <MaterialReactTable
         columns={columns}
         data={colData}
+        enableFullScreenToggle={false}
+        enableDensityToggle={false}
         enableColumnActions={false}
         enableStickyHeader
         enableStickyFooter={pin}
@@ -152,7 +154,7 @@ class CustomTable extends StreamlitComponentBase<State> {
               const displayed = this.displayedTable()
               let finalTable: any = displayed
               if (this.lastRowId != row.id) {
-                finalTable['rowID'] = row.id
+                finalTable['selected_row'] = row.id
                 Streamlit.setComponentValue(finalTable)
                 this.lastRowId = row.id
               }
