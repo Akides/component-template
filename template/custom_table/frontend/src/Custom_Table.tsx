@@ -7,7 +7,6 @@ import {
 import React, { Fragment, ReactNode, createRef } from "react"
 import { MaterialReactTable, type MRT_ColumnDef, MRT_TableInstance, MRT_RowSelectionState, MRT_PaginationState } from 'material-react-table';
 import { Box, Button, Stack } from "@mui/material";
-import { List, size } from "lodash";
 interface State {
   numClicks: number
   isFocused: boolean
@@ -29,6 +28,8 @@ class CustomTable extends StreamlitComponentBase<State> {
     },
     pagination: { pageIndex: 0, pageSize: 10 }
   }
+
+  lastRowId = ''
 
   tableInstanceRef = createRef<MRT_TableInstance<any>>();
 
@@ -149,11 +150,16 @@ class CustomTable extends StreamlitComponentBase<State> {
           onClick: () =>
             {
               const displayed = this.displayedTable()
-              const finalTable = {
-                ...displayed,
-                rowID: row.id
+              let finalTable: any = displayed
+              if (this.lastRowId != row.id) {
+                finalTable['rowID'] = row.id
+                Streamlit.setComponentValue(finalTable)
+                this.lastRowId = row.id
               }
-              Streamlit.setComponentValue(finalTable)
+              else {
+                Streamlit.setComponentValue(finalTable)
+                this.lastRowId = ''
+              }
               this.setState((prevState) => ({
                 rowSelection: {
                   [row.id]: !prevState.rowSelection[row.id],
