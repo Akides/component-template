@@ -12,7 +12,6 @@ interface State {
   isFocused: boolean
   modalOpen: boolean
   rowSelection: MRT_RowSelectionState
-  columnVisibility: Record<string, boolean>
 }
 
 
@@ -21,19 +20,6 @@ interface State {
  * automatically when your component should be re-rendered.
  */
 class CustomTable extends StreamlitComponentBase<State> {
-  public state = { numClicks: 0,
-    isFocused: false,
-    modalOpen: false,
-    rowSelection: {
-    },
-    columnVisibility: {}
-  }
-
-  data = this.props.args.data;
-  pin = this.props.args.pin;
-  lastRowId = ''
-  tableInstanceRef = createRef<MRT_TableInstance<any>>();
-
   configureColumnVisibility = (hideColumns: Array<string>) => {
     let hideObj: { [key: string]: boolean } = {}
     hideColumns.forEach(col => {
@@ -42,13 +28,25 @@ class CustomTable extends StreamlitComponentBase<State> {
     return hideObj
   }
 
-  tableColumns = (table: ArrowTable, pin: boolean, hideColumns: Array<string>): MRT_ColumnDef<any>[] => {
+  public state = { numClicks: 0,
+    isFocused: false,
+    modalOpen: false,
+    rowSelection: {
+    }
+  }
+
+  data = this.props.args.data;
+  sum_columns = this.props.args.sum_columns;
+  lastRowId = ''
+  tableInstanceRef = createRef<MRT_TableInstance<any>>();
+
+  tableColumns = (table: ArrowTable, sumColumns: Array<string>, hideColumns: Array<string>): MRT_ColumnDef<any>[] => {
     const headers = table.columnTable.toArray()
     const tableColumns: any[] = []
 
     for (let i = 0; i < headers.length; i++) {
       let header: { [key: string]: any } = {}
-      if (pin) {
+      if (sumColumns.length > 0) {
         header = {
           Footer: () => (
             <Box color="warning.main">{5}</Box>
@@ -118,7 +116,7 @@ class CustomTable extends StreamlitComponentBase<State> {
     // Arguments that are passed to the plugin in Python are accessible
     // via `this.props.args`. Here, we access the "name" arg.
     const data = this.props.args.data;
-    const pin = this.props.args.pin;
+    const sumColumns = this.props.args.sum_columns;
     const hideColumns: Array<string> = this.props.args.hide_columns;
 
     // Streamlit sends us a theme object via props that we can use to ensure
@@ -144,13 +142,13 @@ class CustomTable extends StreamlitComponentBase<State> {
 
      return (
       <MaterialReactTable
-        columns={this.tableColumns(data, pin, hideColumns)}
+        columns={this.tableColumns(data, sumColumns, hideColumns)}
         data={this.tableData(data)}
         enableFullScreenToggle={false}
         enableDensityToggle={false}
         enableColumnActions={false}
         enableStickyHeader
-        enableStickyFooter={pin}
+        enableStickyFooter={sumColumns.length > 0 ? true : false}
         muiTableContainerProps={{ sx: { maxHeight: '600px' } }}
         initialState={{density: 'compact' } }
         getRowId={(row) => row.ID}
@@ -185,7 +183,7 @@ class CustomTable extends StreamlitComponentBase<State> {
         })}
         state={{
           rowSelection: this.state.rowSelection,
-          columnVisibility: this.configureColumnVisibility(hideColumns)
+          columnVisibility:  this.configureColumnVisibility(hideColumns)
         }}
       />
     );
