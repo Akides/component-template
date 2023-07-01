@@ -12,7 +12,7 @@ interface State {
   isFocused: boolean
   modalOpen: boolean
   rowSelection: MRT_RowSelectionState
-  pagination: MRT_PaginationState
+  columnVisibility: Record<string, boolean>
 }
 
 
@@ -26,15 +26,16 @@ class CustomTable extends StreamlitComponentBase<State> {
     modalOpen: false,
     rowSelection: {
     },
-    pagination: { pageIndex: 0, pageSize: 10 }
+    columnVisibility: {}
   }
 
+  data = this.props.args.data;
+  pin = this.props.args.pin;
   lastRowId = ''
-
   tableInstanceRef = createRef<MRT_TableInstance<any>>();
 
   configureColumnVisibility = (hideColumns: Array<string>) => {
-    let hideObj: { [key: string]: any } = {}
+    let hideObj: { [key: string]: boolean } = {}
     hideColumns.forEach(col => {
       hideObj[col] = false
     });
@@ -63,8 +64,9 @@ class CustomTable extends StreamlitComponentBase<State> {
       const name = headers[i][0].toString();
       header['header'] = name
       header['accessorKey'] = name
-      if (hideColumns.includes(name))
-      header['enableHiding'] = false
+      if (hideColumns.includes(name)) {
+        header['enableHiding'] = false
+      }
       tableColumns.push(header)
     }
     return tableColumns
@@ -150,7 +152,7 @@ class CustomTable extends StreamlitComponentBase<State> {
         enableStickyHeader
         enableStickyFooter={pin}
         muiTableContainerProps={{ sx: { maxHeight: '600px' } }}
-        initialState={{density: 'compact', columnVisibility: this.configureColumnVisibility(hideColumns) }} 
+        initialState={{density: 'compact' } }
         getRowId={(row) => row.ID}
         //enablePagination={false}
         autoResetPageIndex={false}
@@ -181,7 +183,10 @@ class CustomTable extends StreamlitComponentBase<State> {
             cursor: 'pointer',
           },
         })}
-        state={ this.state.rowSelection}
+        state={{
+          rowSelection: this.state.rowSelection,
+          columnVisibility: this.configureColumnVisibility(hideColumns)
+        }}
       />
     );
   }
