@@ -46,7 +46,8 @@ class CustomTable extends StreamlitComponentBase<State> {
 
     for (let i = 0; i < headers.length; i++) {
       let header: { [key: string]: any } = {}
-      if (sumColumns.length > 0) {
+      const headerName = headers[i][0].toString();
+      if (sumColumns.length > 0 && sumColumns.includes(headerName)) {
         header = {
           Footer: () => (
             <Box color="warning.main">{5}</Box>
@@ -59,10 +60,9 @@ class CustomTable extends StreamlitComponentBase<State> {
           size: 100
         }
       }
-      const name = headers[i][0].toString();
-      header['header'] = name
-      header['accessorKey'] = name
-      if (hideColumns.includes(name)) {
+      header['header'] = headerName
+      header['accessorKey'] = headerName
+      if (hideColumns.includes(headerName)) {
         header['enableHiding'] = false
       }
       tableColumns.push(header)
@@ -141,51 +141,73 @@ class CustomTable extends StreamlitComponentBase<State> {
  */
 
      return (
-      <MaterialReactTable
-        columns={this.tableColumns(data, sumColumns, hideColumns)}
-        data={this.tableData(data)}
-        enableFullScreenToggle={false}
-        enableDensityToggle={false}
-        enableColumnActions={false}
-        enableStickyHeader
-        enableStickyFooter={sumColumns.length > 0 ? true : false}
-        muiTableContainerProps={{ sx: { maxHeight: '600px' } }}
-        initialState={{density: 'compact' } }
-        getRowId={(row) => row.ID}
-        //enablePagination={false}
-        autoResetPageIndex={false}
-        tableInstanceRef={this.tableInstanceRef}
-        muiTableBodyRowProps={({ row }) => ({
-          //implement row selection click events manually
-          onClick: () =>
-            {
-              const displayed = this.displayedTable()
-              let finalTable: any = displayed
-              if (this.lastRowId != row.id) {
-                finalTable['selected_row'] = row.id
-                Streamlit.setComponentValue(finalTable)
-                this.lastRowId = row.id
-              }
-              else {
-                Streamlit.setComponentValue(finalTable)
-                this.lastRowId = ''
-              }
-              this.setState((prevState) => ({
-                rowSelection: {
-                  [row.id]: !prevState.rowSelection[row.id],
-                },
-              }));
+      <Fragment>
+        <MaterialReactTable
+          columns={this.tableColumns(data, sumColumns, hideColumns)}
+          data={this.tableData(data)}
+          enableFullScreenToggle={false}
+          enableDensityToggle={false}
+          enableColumnActions={false}
+          enableStickyHeader
+          enableStickyFooter={sumColumns.length > 0 ? true : false}
+          muiTableContainerProps={{ sx: { maxHeight: '600px' } }}
+          initialState={{density: 'compact' } }
+          getRowId={(row) => row.ID}
+          //enablePagination={false}
+          autoResetPageIndex={false}
+          tableInstanceRef={this.tableInstanceRef}
+          muiTableBodyRowProps={({ row }) => ({
+            //implement row selection click events manually
+            onClick: () =>
+              {
+                const displayed = this.displayedTable()
+                let finalTable: any = displayed
+                if (this.lastRowId != row.id) {
+                  finalTable['selected_row'] = row.id
+                  Streamlit.setComponentValue(finalTable)
+                  this.lastRowId = row.id
+                }
+                else {
+                  Streamlit.setComponentValue(finalTable)
+                  this.lastRowId = ''
+                }
+                this.setState((prevState) => ({
+                  rowSelection: {
+                    [row.id]: !prevState.rowSelection[row.id],
+                  },
+                }));
+              },
+            selected: this.state.rowSelection[row.id as keyof typeof this.state.rowSelection],
+            sx: {
+              cursor: 'pointer',
             },
-          selected: this.state.rowSelection[row.id as keyof typeof this.state.rowSelection],
-          sx: {
-            cursor: 'pointer',
-          },
-        })}
-        state={{
-          rowSelection: this.state.rowSelection,
-          columnVisibility:  this.configureColumnVisibility(hideColumns)
-        }}
-      />
+          })}
+          state={{
+            rowSelection: this.state.rowSelection,
+            columnVisibility:  this.configureColumnVisibility(hideColumns)
+          }}
+          renderBottomToolbarCustomActions={({ table }) => (
+            <Button
+                color="secondary"
+                onClick={() => {
+                  let table: any = this.displayedTable()
+                  table['dl_request'] = true
+                  Streamlit.setComponentValue(table)
+                }}
+                variant="text"
+              >
+                Download
+              </Button>
+          )}
+          onColumnFiltersChange={()=> console.log('test')}
+          /*
+        muiTableHeadCellFilterTextFieldProps={({column}) => ({
+          onChange: () => {
+            console.log('man')
+          }
+        })}*/
+        />
+      </Fragment>
     );
   }
 }
