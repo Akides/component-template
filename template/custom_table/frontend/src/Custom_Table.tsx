@@ -5,13 +5,14 @@ import {
   withStreamlitConnection,
 } from "streamlit-component-lib"
 import React, { Fragment, ReactNode, createRef } from "react"
-import { MaterialReactTable, type MRT_ColumnDef, MRT_TableInstance, MRT_RowSelectionState, MRT_PaginationState } from 'material-react-table';
+import { MaterialReactTable, type MRT_ColumnDef, MRT_TableInstance, MRT_RowSelectionState, MRT_PaginationState, MRT_ColumnFiltersState, MRT_Updater } from 'material-react-table';
 import { Box, Button, Stack } from "@mui/material";
 interface State {
   numClicks: number
   isFocused: boolean
   modalOpen: boolean
   rowSelection: MRT_RowSelectionState
+  columnFilters: MRT_ColumnFiltersState
 }
 
 
@@ -32,7 +33,8 @@ class CustomTable extends StreamlitComponentBase<State> {
     isFocused: false,
     modalOpen: false,
     rowSelection: {
-    }
+    },
+    columnFilters: []
   }
 
   data = this.props.args.data;
@@ -111,6 +113,13 @@ class CustomTable extends StreamlitComponentBase<State> {
     //Streamlit.setComponentValue(this.tableInstanceRef.current?.getState().rowSelection)
   }
 
+  handleColumnFiltersChange = (updater: MRT_Updater<MRT_ColumnFiltersState>) => {
+    this.setState((prevState) => ({
+      columnFilters: updater instanceof Function ? updater(prevState.columnFilters) : updater,
+    }));
+    // Put more code for your side effects here, guaranteed to only run once, even in React Strict Mode
+  };
+
   public render = (): ReactNode => {
 
     // Arguments that are passed to the plugin in Python are accessible
@@ -184,7 +193,8 @@ class CustomTable extends StreamlitComponentBase<State> {
           })}
           state={{
             rowSelection: this.state.rowSelection,
-            columnVisibility:  this.configureColumnVisibility(hideColumns)
+            columnVisibility:  this.configureColumnVisibility(hideColumns),
+            columnFilters: this.state.columnFilters,
           }}
           renderBottomToolbarCustomActions={({ table }) => (
             <Button
@@ -199,7 +209,13 @@ class CustomTable extends StreamlitComponentBase<State> {
                 Download
               </Button>
           )}
-          onColumnFiltersChange={()=> console.log('test')}
+          /*onColumnFiltersChange={(newColumnFilters) => {
+            this.setState({
+              columnFilters: newColumnFilters}
+            );
+
+          }}*/
+          onColumnFiltersChange={this.handleColumnFiltersChange}
           /*
         muiTableHeadCellFilterTextFieldProps={({column}) => ({
           onChange: () => {
