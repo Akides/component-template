@@ -5,12 +5,9 @@ import {
   withStreamlitConnection,
 } from "streamlit-component-lib"
 import React, { Fragment, ReactNode, createRef } from "react"
-import { MaterialReactTable, type MRT_ColumnDef, MRT_TableInstance, MRT_RowSelectionState, MRT_PaginationState, MRT_ColumnFiltersState, MRT_Updater } from 'material-react-table';
-import { Box, Button, Stack } from "@mui/material";
+import { MaterialReactTable, type MRT_ColumnDef, MRT_TableInstance, MRT_RowSelectionState, MRT_ColumnFiltersState, MRT_Updater } from 'material-react-table';
+import { Box, Button } from "@mui/material";
 interface State {
-  numClicks: number
-  isFocused: boolean
-  modalOpen: boolean
   rowSelection: MRT_RowSelectionState
   columnFilters: MRT_ColumnFiltersState
 }
@@ -30,15 +27,14 @@ class CustomTable extends StreamlitComponentBase<State> {
   }
 
   public state = { numClicks: 0,
-    isFocused: false,
-    modalOpen: false,
     rowSelection: {
     },
-    columnFilters: []
+    columnFilters: [],
   }
 
-  data = this.props.args.data;
-  sum_columns = this.props.args.sum_columns;
+  data = this.props.args.data
+  sum_columns = this.props.args.sum_columns
+  key = this.props.args.key
   lastRowId = ''
   tableInstanceRef = createRef<MRT_TableInstance<any>>();
 
@@ -46,13 +42,19 @@ class CustomTable extends StreamlitComponentBase<State> {
     const headers = table.columnTable.toArray()
     const tableColumns: any[] = []
 
+    let tableRef = this.tableInstanceRef.current
     for (let i = 0; i < headers.length; i++) {
       let header: { [key: string]: any } = {}
       const headerName = headers[i][0].toString();
-      if (sumColumns.length > 0 && sumColumns.includes(headerName)) {
+      if (sumColumns.includes(headerName) && tableRef !== null) {
+        let rows = tableRef!.getFilteredRowModel().rows.map(row => row.original)
+        let row_sum = 0
+        rows.forEach(row => {
+            row_sum += Number(row[headerName])
+        });
         header = {
           Footer: () => (
-            <Box color="warning.main">{5}</Box>
+            <Box color="warning.main">{row_sum}</Box>
           ),
           size: 100
         }
@@ -108,17 +110,20 @@ class CustomTable extends StreamlitComponentBase<State> {
     }
   }
 
-  handleRowSelectionChange = () => {
-    //console.log(this.tableInstanceRef.current?.getState().rowSelection)
-    //Streamlit.setComponentValue(this.tableInstanceRef.current?.getState().rowSelection)
-  }
-
   handleColumnFiltersChange = (updater: MRT_Updater<MRT_ColumnFiltersState>) => {
     this.setState((prevState) => ({
       columnFilters: updater instanceof Function ? updater(prevState.columnFilters) : updater,
     }));
-    // Put more code for your side effects here, guaranteed to only run once, even in React Strict Mode
+    this.setState((prevState) => ({
+      columnFilters: updater instanceof Function ? updater(prevState.columnFilters) : updater,
+    }));
   };
+
+  handleDownloadClick = () => {
+    let table: any = this.displayedTable()
+                  table['dl_request'] = true
+                  Streamlit.setComponentValue(table)
+  }
 
   public render = (): ReactNode => {
 
@@ -171,7 +176,7 @@ class CustomTable extends StreamlitComponentBase<State> {
               {
                 const displayed = this.displayedTable()
                 let finalTable: any = displayed
-                if (this.lastRowId != row.id) {
+                if (this.lastRowId !== row.id) {
                   finalTable['selected_row'] = row.id
                   Streamlit.setComponentValue(finalTable)
                   this.lastRowId = row.id
@@ -199,29 +204,13 @@ class CustomTable extends StreamlitComponentBase<State> {
           renderBottomToolbarCustomActions={({ table }) => (
             <Button
                 color="secondary"
-                onClick={() => {
-                  let table: any = this.displayedTable()
-                  table['dl_request'] = true
-                  Streamlit.setComponentValue(table)
-                }}
+                onClick={this.handleDownloadClick}
                 variant="text"
               >
                 Download
               </Button>
           )}
-          /*onColumnFiltersChange={(newColumnFilters) => {
-            this.setState({
-              columnFilters: newColumnFilters}
-            );
-
-          }}*/
           onColumnFiltersChange={this.handleColumnFiltersChange}
-          /*
-        muiTableHeadCellFilterTextFieldProps={({column}) => ({
-          onChange: () => {
-            console.log('man')
-          }
-        })}*/
         />
       </Fragment>
     );
