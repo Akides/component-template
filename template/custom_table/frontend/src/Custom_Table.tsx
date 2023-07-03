@@ -121,8 +121,11 @@ class CustomTable extends StreamlitComponentBase<State> {
 
   handleDownloadClick = () => {
     let table: any = this.displayedTable()
-                  table['dl_request'] = true
-                  Streamlit.setComponentValue(table)
+    
+
+
+    table['dl_request'] = true
+    Streamlit.setComponentValue(table)
   }
 
   public render = (): ReactNode => {
