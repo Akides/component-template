@@ -5,11 +5,14 @@ import {
   withStreamlitConnection,
 } from "streamlit-component-lib"
 import React, { Fragment, ReactNode, createRef } from "react"
-import { MaterialReactTable, type MRT_ColumnDef, MRT_TableInstance, MRT_RowSelectionState, MRT_ColumnFiltersState, MRT_Updater } from 'material-react-table';
+import { MaterialReactTable, type MRT_ColumnDef, MRT_TableInstance, MRT_RowSelectionState, MRT_ColumnFiltersState, MRT_Updater, MRT_Row } from 'material-react-table';
 import { Box, Button } from "@mui/material";
+import writeXlsxFile from 'write-excel-file'
+
 interface State {
   rowSelection: MRT_RowSelectionState
   columnFilters: MRT_ColumnFiltersState
+  isFocused: boolean
 }
 
 
@@ -26,7 +29,8 @@ class CustomTable extends StreamlitComponentBase<State> {
     return hideObj
   }
 
-  public state = { numClicks: 0,
+  public state = {
+    isFocused: false,
     rowSelection: {
     },
     columnFilters: [],
@@ -119,13 +123,32 @@ class CustomTable extends StreamlitComponentBase<State> {
     }));
   };
 
-  handleDownloadClick = () => {
-    let table: any = this.displayedTable()
-    
+  handleDownloadClick = async (rows: any[]) => {
+    let headerNames = Object.keys(rows[0])
+    let headerRow: any[] = []
+    let dataRows: Array<any[]> = []
 
+    headerNames.forEach(name => {
+      headerRow.push({
+        value: name
+      })
+    });
+    dataRows.push(headerRow)
 
-    table['dl_request'] = true
-    Streamlit.setComponentValue(table)
+    rows.forEach(row => {
+      const dataRow: any[] = []
+      headerNames.forEach(name => {
+        dataRow.push({
+          type: String,
+          value: row[name]
+        })
+      });
+      dataRows.push(dataRow)  
+    })
+
+    await writeXlsxFile(dataRows, {
+      fileName: 'employees.xlsx'
+    })
   }
 
   public render = (): ReactNode => {
@@ -207,7 +230,7 @@ class CustomTable extends StreamlitComponentBase<State> {
           renderBottomToolbarCustomActions={({ table }) => (
             <Button
                 color="secondary"
-                onClick={this.handleDownloadClick}
+                onClick={() => this.handleDownloadClick(table.getPrePaginationRowModel().rows.map(row => row.original))}
                 variant="text"
               >
                 Download

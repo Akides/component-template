@@ -12,7 +12,8 @@
     "package.json": "^2.0.1",
     "react": "^18",
     "react-dom": "^18",
-    "streamlit-component-lib": "^1.3.0"
+    "streamlit-component-lib": "^1.3.0",
+    "write-excel-file": "^1.4.27"
   },
   "scripts": {
     "start": "react-scripts start",
