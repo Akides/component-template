@@ -5,7 +5,7 @@ import {
   withStreamlitConnection,
 } from "streamlit-component-lib"
 import React, { Fragment, ReactNode, createRef } from "react"
-import { MaterialReactTable, type MRT_ColumnDef, MRT_TableInstance, MRT_RowSelectionState, MRT_ColumnFiltersState, MRT_Updater, MRT_Row } from 'material-react-table';
+import { MaterialReactTable, type MRT_ColumnDef, MRT_TableInstance, MRT_RowSelectionState, MRT_ColumnFiltersState, MRT_Updater } from 'material-react-table';
 import { Box, Button } from "@mui/material";
 import writeXlsxFile from 'write-excel-file'
 
